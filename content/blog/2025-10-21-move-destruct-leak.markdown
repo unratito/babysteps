@@ -9,14 +9,14 @@ This post presents a proposal to extend Rust to support a number of different ki
 
 Nothing this good comes for free. The big catch of the proposal is that it introduces more "core splits" into Rust's types. I believe these splits are well motivated and reasonable -- they reflect *inherent complexity*, in other words, but they are something we'll want to think carefully about nonetheless.
 
-["must move"]: {{< baseurl >}}/blog/2023/03/16/must-move-types.html
+["must move"]: {{< baseurl >}}/blog/2023/03/16/must-move-types/
 
 ## Summary
 
 The TL;DR of the proposal is that we should:
 
 * Introduce a new "default trait bound" `Forget` and an associated trait hierarchy:
-    * `trait Forget: Drop`, representing values that can be forgotten
+    * `trait Forget: Destruct`, representing values that can be forgotten
     * `trait Destruct: Move`, representing values with a destructor
     * `trait Move: Pointee`, representing values that can be moved
     * `trait Pointee`, the base trait that represents *any value*
@@ -111,6 +111,8 @@ When you start poking around, you find that *guaranteed* destructors turn up qui
 ## So what can we do about it?
 
 This situation is very analogous to the challenge of revisiting the default `Sized` bound, and I think the same basic approach that I outlined in [this blog post][sized] will work.
+
+[sized]: {{< baseurl >}}/blog/2024/04/23/dynsized-unsized/
 
 The core of the idea is simple: have a "special" set of traits arranged in a hierarchy:
 
@@ -344,7 +346,7 @@ This setup provides attacks a key problem that has blocked async drop in my mind
 
 ### Why is the trait `Destruct` and not `Drop`?
 
-This comes from the const generifs work. I don't love it. But there is a logic to it. Right now, when you drop a struct or other value, that actually does a whole sequence of things, only one of which is running any `Drop` impl -- it also (for example) drops all the fields in the struct recursively, etc. The idea is that "destruct" refers to this whole sequence.
+This comes from the const generics work. I don't love it. But there is a logic to it. Right now, when you drop a struct or other value, that actually does a whole sequence of things, only one of which is running any `Drop` impl -- it also (for example) drops all the fields in the struct recursively, etc. The idea is that "destruct" refers to this whole sequence.
 
 ### How hard would this to be to prototype?
 
